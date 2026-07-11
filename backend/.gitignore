@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Cloned StatsBomb open-data repo (tens of GB) — fetch it yourself, don't commit it:
+#   git clone https://github.com/statsbomb/open-data app/data/open-data
+app/data/open-data/
+
+# Local analytics/LLM-output cache (see services/cache_service.py)
+app/data/cache/
