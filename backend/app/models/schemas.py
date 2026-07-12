@@ -51,6 +51,8 @@ class TeamStats(BaseModel):
     total_xg: float
     total_shots: int
     touches: int
+    passes: int
+    duels_won: int
     zone_passing_pct: ZonePassingPct
     pressures: int
     pressure_regain_pct: float
@@ -103,10 +105,74 @@ class Player(BaseModel):
     home_or_away: str
     position: Optional[str] = None
     shirt_number: int
+    is_starter: bool
     minutes_played: float
     stats: PlayerMatchStats
     average_position: Optional[AveragePosition] = None
     touch_locations: list[AveragePosition] = []
+
+
+class KeyMoment(BaseModel):
+    """One auto-extracted timeline event (goal, big chance, card, substitution)."""
+
+    minute: int
+    second: int
+    home_or_away: str
+    team_name: str
+    type: str  # goal | big_chance | yellow_card | red_card | substitution
+    player: Optional[str] = None
+    player_off: Optional[str] = None
+    player_on: Optional[str] = None
+    xg: Optional[float] = None
+    description: str
+
+
+class PassingNetworkNode(BaseModel):
+    player_id: int
+    name: str
+    x: float
+    y: float
+    pass_count: int
+
+
+class PassingNetworkEdge(BaseModel):
+    from_player_id: int
+    to_player_id: int
+    count: int
+
+
+class TeamPassingNetwork(BaseModel):
+    team_name: str
+    home_or_away: str
+    nodes: list[PassingNetworkNode]
+    edges: list[PassingNetworkEdge]
+
+
+class ShotStart(BaseModel):
+    x: float
+    y: float
+
+
+class ShotEnd(BaseModel):
+    x: float
+    y: float
+    z: float  # ball height at the end point, in pitch units (crossbar ~= 2.67)
+
+
+class Shot(BaseModel):
+    """One shot with its real 3D trajectory — the data behind the 3D scene."""
+
+    id: Optional[str] = None
+    team_name: str
+    home_or_away: str
+    player_name: Optional[str] = None
+    minute: int
+    outcome: Optional[str] = None
+    is_goal: bool
+    xg: float
+    body_part: Optional[str] = None
+    start: ShotStart
+    end: ShotEnd
 
 
 class AnalyticsResponse(BaseModel):

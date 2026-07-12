@@ -16,13 +16,15 @@ MODEL = "claude-sonnet-5"
 
 SYSTEM_PROMPT = """\
 You are a professional football (soccer) tactical analyst. You are given \
-already-computed match statistics (possession, xG, shots, touches, \
-zone-based passing, pressing success) for both teams in a single match — \
-never raw event-by-event data. Reason over these numbers the way an \
-analyst would brief a coaching staff: identify real patterns the stats \
-imply, not generic commentary. Every claim must be traceable to a number \
-you were given. Do not invent statistics, player details, or moments that \
-aren't supported by the provided data."""
+already-computed match statistics for both teams (possession, xG, shots, \
+touches, zone-based passing, pressing success) plus a per-player stat line \
+for everyone who featured — never raw event-by-event data. Reason over these \
+numbers the way an analyst would brief a coaching staff: identify real \
+patterns the stats imply, not generic commentary. Every claim must be \
+traceable to a number you were given. Do not invent statistics, players, or \
+moments that aren't supported by the provided data. When you name the man of \
+the match, pick a single real player from the provided per-player lines and \
+justify it with that player's own numbers."""
 
 # Forces Claude's response into this exact JSON shape via tool use — no
 # free-text parsing required on our side.
@@ -56,11 +58,11 @@ ANALYSIS_TOOL = {
             },
             "mvp": {
                 "type": "string",
-                "description": "The team judged most influential based on the stats (open data here is team-level, not player-level).",
+                "description": "The single player who was man of the match. Use one player's exact name, copied verbatim from the provided per-player lines — not a team.",
             },
             "man_of_the_match_reasoning": {
                 "type": "string",
-                "description": "Two sentences justifying the MVP pick using specific numbers.",
+                "description": "Exactly two sentences justifying the man of the match pick, citing that player's own specific stats (e.g. goals, xG, assists, passes).",
             },
             "match_storyline_headline": {
                 "type": "string",
@@ -96,7 +98,32 @@ def _client() -> anthropic.Anthropic:
     return anthropic.Anthropic()
 
 
-def _build_prompt(match: dict, team_stats: dict[str, dict]) -> str:
+def _build_player_lines(players: list[dict]) -> str:
+    """One compact stat line per player who actually featured, most-involved
+    first, so the model can name a real man of the match and cite real
+    numbers. Unused subs (0 minutes) are dropped to keep the prompt focused.
+    """
+    played = [p for p in players if p.get("minutes_played", 0) > 0]
+
+    def involvement(p: dict) -> float:
+        s = p["stats"]
+        return s["goals"] * 3 + s["assists"] * 2 + s["xg"] + s["xa"] + s["touches"] / 100
+
+    played.sort(key=involvement, reverse=True)
+
+    lines = []
+    for p in played:
+        s = p["stats"]
+        lines.append(
+            f"- {p['name']} ({p['team_name']}, {p.get('position') or 'N/A'}, "
+            f"{p['minutes_played']:.0f}min): {s['goals']}G {s['assists']}A, "
+            f"xG {s['xg']}, xA {s['xa']}, {s['passes']} passes @{s['pass_accuracy']}%, "
+            f"{s['tackles']} tackles, {s['dribbles']} dribbles, {s['touches']} touches"
+        )
+    return "\n".join(lines)
+
+
+def _build_prompt(match: dict, team_stats: dict[str, dict], players: list[dict]) -> str:
     home = match["home_team"]["team_name"]
     away = match["away_team"]["team_name"]
     return f"""\
@@ -104,16 +131,23 @@ Match: {home} {match['home_score']} - {match['away_score']} {away}
 Competition stage: {match['competition_stage']}
 Date: {match['match_date']}
 
-Computed stats:
+Team stats:
 {home}: {team_stats.get(home, {})}
 {away}: {team_stats.get(away, {})}
 
-Analyze this match using only the stats above."""
+Player stat lines (most involved first):
+{_build_player_lines(players)}
+
+Analyze this match using only the stats above. For the man of the match, pick
+one real player from the list above and justify it with their own numbers."""
 
 
-def generate_tactical_analysis(match: dict, team_stats: dict[str, dict]) -> dict:
+def generate_tactical_analysis(
+    match: dict, team_stats: dict[str, dict], players: list[dict]
+) -> dict:
     """Calls Claude once, forced to respond via the provide_tactical_analysis
-    tool, and returns its validated input dict directly as the analysis.
+    tool, and returns its validated input dict directly as the analysis. The
+    per-player stat lines let it name a real man of the match, not just a team.
     """
     client = _client()
     try:
@@ -123,7 +157,7 @@ def generate_tactical_analysis(match: dict, team_stats: dict[str, dict]) -> dict
             system=SYSTEM_PROMPT,
             tools=[ANALYSIS_TOOL],
             tool_choice={"type": "tool", "name": "provide_tactical_analysis"},
-            messages=[{"role": "user", "content": _build_prompt(match, team_stats)}],
+            messages=[{"role": "user", "content": _build_prompt(match, team_stats, players)}],
         )
     except anthropic.AuthenticationError as exc:
         raise RuntimeError(

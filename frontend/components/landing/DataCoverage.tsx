@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const coverage = [
-  { label: "FIFA World Cups", detail: "Every tournament StatsBomb has published, 1970 to 2022", stat: "13" },
-  { label: "Champions League Finals", detail: "Full event data for Europe's showcase match", stat: "9" },
-  { label: "Messi's La Liga career", detail: "Season-by-season event data across his time at Barcelona", stat: "17 seasons" },
+  { label: "Matches, fully searchable", detail: "Every game in the StatsBomb Open Data clone — search by team, competition, or season", stat: "3,900+" },
+  { label: "Competitions", detail: "World Cups, Champions League, top domestic leagues, and women's football, men's and women's", stat: "24" },
+  { label: "Event-level detail", detail: "Coordinates, xG, passes, shots, pressures and player positions behind every visualization", stat: "Per-event" },
 ];
 
 export function DataCoverage() {
@@ -31,6 +34,21 @@ export function DataCoverage() {
             Every report is generated from real, event-level match data, free
             for research and non-commercial use.
           </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mt-8"
+        >
+          <Button asChild size="lg">
+            <Link href="/matches">
+              Search matches
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
         </motion.div>
 
         <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-navy-700 bg-navy-700 sm:grid-cols-3">

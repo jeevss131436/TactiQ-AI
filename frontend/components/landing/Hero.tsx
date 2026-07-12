@@ -53,15 +53,15 @@ export function Hero() {
           className="mt-10 flex flex-col gap-4 sm:flex-row"
         >
           <Button asChild size="lg">
-            <Link href="/dashboard">
-              Launch Dashboard
+            <Link href="/matches">
+              Explore matches
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="#features">
+            <Link href="/dashboard">
               <PlayCircle className="h-4 w-4" />
-              See how it works
+              Launch Dashboard
             </Link>
           </Button>
         </motion.div>

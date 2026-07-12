@@ -3,8 +3,13 @@
 Endpoints:
   GET /api/competitions
   GET /api/matches/{competition_id}/{season_id}
+  GET /api/matches/search?q=...
+  GET /api/match/{match_id}
   GET /api/analytics/{match_id}
   GET /api/players/{match_id}
+  GET /api/passing-network/{match_id}
+  GET /api/shots/{match_id}
+  GET /api/timeline/{match_id}
 
 Responses use an api-football-style envelope (get/parameters/errors/
 results/paging/response) for a familiar REST shape. StatsBomb Open Data
@@ -17,7 +22,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.services import cache_service, llm_service, statsbomb_service
@@ -51,6 +56,12 @@ def list_competitions():
     return envelope("competitions", {}, competitions)
 
 
+@app.get("/api/matches/search")
+def search_matches(q: str = Query(default=""), limit: int = Query(default=40, le=100)):
+    matches = statsbomb_service.search_matches(q, limit=limit)
+    return envelope("matches-search", {"q": q, "limit": str(limit)}, matches)
+
+
 @app.get("/api/matches/{competition_id}/{season_id}")
 def list_matches(competition_id: int, season_id: int):
     matches = statsbomb_service.get_matches(competition_id, season_id)
@@ -61,6 +72,19 @@ def list_matches(competition_id: int, season_id: int):
     )
 
 
+@app.get("/api/match/{match_id}")
+def get_match(match_id: int):
+    """Lightweight, no-LLM match view for the dashboard header: match summary
+    plus computed team stats (possession, xG) — everything the header shows
+    without paying for a Claude call."""
+    analytics = statsbomb_service.compute_match_analytics(match_id)
+    return envelope(
+        "match",
+        {"match_id": str(match_id)},
+        [{"match": analytics["match"], "team_stats": analytics["team_stats"]}],
+    )
+
+
 @app.get("/api/analytics/{match_id}")
 def get_analytics(match_id: int):
     cached = cache_service.get_cached_analytics(match_id)
@@ -68,10 +92,11 @@ def get_analytics(match_id: int):
         return envelope("analytics", {"match_id": str(match_id)}, [{**cached, "cached": True}])
 
     analytics = statsbomb_service.compute_match_analytics(match_id)
+    players = statsbomb_service.compute_player_stats(match_id)
 
     try:
         ai_evaluation = llm_service.generate_tactical_analysis(
-            analytics["match"], analytics["team_stats"]
+            analytics["match"], analytics["team_stats"], players
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -94,3 +119,21 @@ def get_analytics(match_id: int):
 def list_players(match_id: int):
     players = statsbomb_service.compute_player_stats(match_id)
     return envelope("players", {"match_id": str(match_id)}, players)
+
+
+@app.get("/api/passing-network/{match_id}")
+def get_passing_network(match_id: int):
+    networks = statsbomb_service.compute_passing_network(match_id)
+    return envelope("passing-network", {"match_id": str(match_id)}, networks)
+
+
+@app.get("/api/shots/{match_id}")
+def get_shots(match_id: int):
+    shots = statsbomb_service.compute_shots(match_id)
+    return envelope("shots", {"match_id": str(match_id)}, shots)
+
+
+@app.get("/api/timeline/{match_id}")
+def get_timeline(match_id: int):
+    moments = statsbomb_service.compute_timeline(match_id)
+    return envelope("timeline", {"match_id": str(match_id)}, moments)
