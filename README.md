@@ -58,6 +58,8 @@ Leave this running. You should see `Uvicorn running on http://127.0.0.1:8000`. V
 
 > **Note:** Match data is fetched automatically from StatsBomb's GitHub repo the first time you ask for it — you don't need to download anything separately. (If `backend/app/data/open-data` already exists as a local clone of that repo, it's used instead and is faster, but it's optional — several GB, only clone it if you want.)
 
+> **Optional — faster with Supabase caching:** By default, computed analytics and AI reports are cached to a local JSON file. If you'd rather cache them in Supabase (Postgres) — so repeat requests skip both the Claude call and the event-parsing, and the cache is shared across machines — add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` to `.env` (see `.env.example`). Leave them unset and everything works exactly as before. The schema lives in the project's Supabase migrations.
+
 ### Terminal 2 — frontend (the actual app)
 
 ```bash

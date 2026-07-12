@@ -26,7 +26,7 @@ function BulletList({
 function LoadingState() {
   return (
     <div className="flex h-64 items-center justify-center rounded-lg bg-navy-950/60">
-      <p className="text-sm text-slate-500">Generating AI tactical analysis…</p>
+      <p className="text-sm text-slate-500">Generating AI tactical analysis — this may take a moment as it generates…</p>
     </div>
   );
 }

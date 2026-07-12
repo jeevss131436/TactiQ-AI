@@ -105,6 +105,7 @@ def get_analytics(match_id: int):
         "match": analytics["match"],
         "team_stats": analytics["team_stats"],
         "ai_evaluation": ai_evaluation,
+        "model": llm_service.MODEL,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "cached": False,
     }
@@ -117,23 +118,39 @@ def get_analytics(match_id: int):
 
 @app.get("/api/players/{match_id}")
 def list_players(match_id: int):
+    cached = cache_service.get_cached_players(match_id)
+    if cached is not None:
+        return envelope("players", {"match_id": str(match_id)}, cached)
     players = statsbomb_service.compute_player_stats(match_id)
+    cache_service.save_cached_players(match_id, players)
     return envelope("players", {"match_id": str(match_id)}, players)
 
 
 @app.get("/api/passing-network/{match_id}")
 def get_passing_network(match_id: int):
+    cached = cache_service.get_cached_passing_network(match_id)
+    if cached is not None:
+        return envelope("passing-network", {"match_id": str(match_id)}, cached)
     networks = statsbomb_service.compute_passing_network(match_id)
+    cache_service.save_cached_passing_network(match_id, networks)
     return envelope("passing-network", {"match_id": str(match_id)}, networks)
 
 
 @app.get("/api/shots/{match_id}")
 def get_shots(match_id: int):
+    cached = cache_service.get_cached_shots(match_id)
+    if cached is not None:
+        return envelope("shots", {"match_id": str(match_id)}, cached)
     shots = statsbomb_service.compute_shots(match_id)
+    cache_service.save_cached_shots(match_id, shots)
     return envelope("shots", {"match_id": str(match_id)}, shots)
 
 
 @app.get("/api/timeline/{match_id}")
 def get_timeline(match_id: int):
+    cached = cache_service.get_cached_timeline(match_id)
+    if cached is not None:
+        return envelope("timeline", {"match_id": str(match_id)}, cached)
     moments = statsbomb_service.compute_timeline(match_id)
+    cache_service.save_cached_timeline(match_id, moments)
     return envelope("timeline", {"match_id": str(match_id)}, moments)

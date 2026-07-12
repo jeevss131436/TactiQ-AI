@@ -75,7 +75,7 @@ export function PlayerAnalyticsTab({
                 </p>
               )}
               {!evaluationError && !evaluation && (
-                <p className="text-sm text-slate-500">Generating AI storyline…</p>
+                <p className="text-sm text-slate-500">Generating AI storyline — this may take a moment as it generates…</p>
               )}
               {evaluation && (
                 <p className="font-display text-lg leading-snug text-white">
@@ -99,7 +99,7 @@ export function PlayerAnalyticsTab({
               <p className="text-sm text-signal-down">Could not load AI analysis.</p>
             )}
             {!evaluationError && !evaluation && (
-              <p className="text-sm text-slate-500">Reasoning over match stats…</p>
+              <p className="text-sm text-slate-500">Reasoning over match stats — this may take a moment as it generates…</p>
             )}
             {evaluation && (
               <div className="flex flex-col gap-2">
