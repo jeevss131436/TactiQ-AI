@@ -18,6 +18,7 @@ remains the only real data source — see services/statsbomb_service.py.
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -31,9 +32,26 @@ load_dotenv()
 
 app = FastAPI(title="Match Analytics AI", version="0.1.0")
 
+
+def _allowed_origins() -> list[str]:
+    """Frontend origins allowed to call this API. Local dev is always allowed;
+    add the deployed frontend URL(s) in production via ALLOWED_ORIGINS
+    (comma-separated), e.g. "https://tactiq.vercel.app".
+    """
+    origins = {"http://localhost:3000"}
+    for origin in os.environ.get("ALLOWED_ORIGINS", "").split(","):
+        origin = origin.strip().rstrip("/")
+        if origin:
+            origins.add(origin)
+    return sorted(origins)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_allowed_origins(),
+    # Also match Vercel preview deployments (changing subdomains) when set,
+    # e.g. ALLOWED_ORIGIN_REGEX="https://.*\\.vercel\\.app".
+    allow_origin_regex=os.environ.get("ALLOWED_ORIGIN_REGEX") or None,
     allow_methods=["GET"],
     allow_headers=["*"],
 )

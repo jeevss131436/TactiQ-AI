@@ -1,0 +1,32 @@
+# Render blueprint for the TactiQ-AI FastAPI backend.
+# In Render: New + -> Blueprint -> pick this repo. Render reads this file,
+# builds from backend/, and prompts for the secret env vars marked sync:false.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: tactiq-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /docs
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      # Required: your Claude API key (console.anthropic.com). Set in dashboard.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Required in prod: your deployed frontend origin(s), comma-separated,
+      # e.g. https://tactiq.vercel.app  (no trailing slash).
+      - key: ALLOWED_ORIGINS
+        sync: false
+      # Optional: regex to also allow Vercel preview URLs,
+      # e.g. https://.*\.vercel\.app
+      - key: ALLOWED_ORIGIN_REGEX
+        sync: false
+      # Optional: enable Supabase caching (leave unset for JSON-file fallback).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
