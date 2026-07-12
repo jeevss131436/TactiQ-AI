@@ -4,14 +4,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PassingNetworkCanvas } from "./PassingNetworkCanvas";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-navy-700/60 bg-navy-950">
       <div className="absolute inset-0 bg-hero-glow" />
       <div className="absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,black,transparent)]" />
-      <PassingNetworkCanvas />
+      {/* Passing network removed temporarily for demo stability */}
 
       <div className="relative mx-auto flex max-w-5xl flex-col items-center px-6 py-32 text-center sm:py-40">
         <motion.div

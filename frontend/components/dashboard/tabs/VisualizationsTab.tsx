@@ -1,7 +1,6 @@
 "use client";
 
 import { TeamHeatmapCard } from "@/components/dashboard/TeamHeatmapCard";
-import { PassingNetworkCard } from "@/components/dashboard/PassingNetworkCard";
 import { FormationCard } from "@/components/dashboard/FormationCard";
 import { Shots3DCard } from "@/components/dashboard/Shots3DCard";
 import { useMatchPassingNetwork, useMatchShots } from "@/lib/api";
@@ -48,18 +47,7 @@ export function VisualizationsTab({
         error={playersError}
       />
 
-      <PassingNetworkCard
-        teamName={match.homeTeam.teamName}
-        homeOrAway="home"
-        networks={networks}
-        error={networksError}
-      />
-      <PassingNetworkCard
-        teamName={match.awayTeam.teamName}
-        homeOrAway="away"
-        networks={networks}
-        error={networksError}
-      />
+      {/* Passing network disabled for now — removed from dashboard */}
 
       <Shots3DCard match={match} shots={shots} error={shotsError} />
     </div>

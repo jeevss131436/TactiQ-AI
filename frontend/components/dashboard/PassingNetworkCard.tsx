@@ -18,7 +18,7 @@ export function PassingNetworkCard({ teamName, homeOrAway, networks, error }: Pa
     <Card>
       <CardHeader>
         <CardTitle>Passing Network — {teamName}</CardTitle>
-        <CardDescription>Node size and edge weight scale with pass volume, from real event data</CardDescription>
+        <CardDescription>Player nodes and links scale with pass volume, with labels and legend added for faster reading.</CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         {error && (
